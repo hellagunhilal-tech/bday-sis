@@ -125,32 +125,36 @@
     font-family: var(--font-script); font-size:2.6rem; color:var(--gold-soft); text-align:center;
   }
 
-  /* ---------- MEMORY STRIP ---------- */
-  #memories{ padding-top:40px; }
-  .strip{
-    display:flex; gap:26px; overflow-x:auto; padding: 50px 6vw 30px; scroll-snap-type:x proximity;
-  }
-  .strip::-webkit-scrollbar{ height:6px; }
-  .strip::-webkit-scrollbar-thumb{ background: var(--gold); border-radius:4px; opacity:.5; }
+  /* ---------- MEMORY SLIDESHOW ---------- */
+  #memories{ padding-top:40px; display:flex; flex-direction:column; align-items:center; }
+  .slideshow{ margin-top:40px; display:flex; flex-direction:column; align-items:center; }
+  .slideshow-card{ perspective:1000px; }
   .polaroid{
-    flex:0 0 240px; background:var(--paper); padding:14px 14px 46px; border-radius:3px;
-    box-shadow: 0 18px 30px rgba(0,0,0,.4);
-    scroll-snap-align:center;
-    transition: transform .3s ease;
-    cursor:default;
+    width:280px; background:var(--paper); padding:16px 16px 50px; border-radius:3px;
+    box-shadow: 0 22px 40px rgba(0,0,0,.45);
+    cursor:pointer; user-select:none;
+    transform: rotate(-2deg);
+    transition: transform .2s ease, opacity .25s ease;
   }
-  .polaroid:nth-child(odd){ transform: rotate(-3deg); }
-  .polaroid:nth-child(even){ transform: rotate(2.5deg); }
-  .polaroid:hover{ transform: scale(1.05) rotate(0deg); }
+  .polaroid:hover{ transform: scale(1.03) rotate(0deg); }
+  .polaroid.fading{ opacity:0; transform: scale(.96) rotate(-2deg); }
   .polaroid .photo{
     width:100%; aspect-ratio: 4/5; border-radius:2px; overflow:hidden;
     background: linear-gradient(135deg, #d8c3a5, #b79c78);
     display:flex; align-items:center; justify-content:center;
-    color:#7a5f3f; font-family:var(--font-ui); font-size:.75rem; text-align:center; padding:10px;
+    color:#7a5f3f; font-family:var(--font-ui); font-size:.8rem; text-align:center; padding:10px;
   }
-  .polaroid .cap{
-    font-family: var(--font-script); font-size:1.25rem; color:var(--ink); text-align:center; margin-top:12px;
+  .polaroid .photo img{ width:100%; height:100%; object-fit:cover; }
+  .slideshow-hint{
+    font-family: var(--font-ui); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase;
+    color: var(--gold-soft); opacity:.6; margin-top:22px;
   }
+  .slideshow-dots{ display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; justify-content:center; max-width:260px; }
+  .slideshow-dot{
+    width:7px; height:7px; border-radius:50%; background: rgba(232,184,75,.3);
+    transition: background .2s ease, transform .2s ease; cursor:pointer;
+  }
+  .slideshow-dot.active{ background: var(--gold); transform: scale(1.3); }
 
   /* ---------- LETTER ---------- */
   #letter{ display:flex; flex-direction:column; align-items:center; padding-bottom:60px; }
@@ -249,6 +253,8 @@
   .cake{ margin: 40px auto 0; width:220px; }
   .candle-btn{
     background:none; border:none; cursor:pointer; display:block; margin:0 auto;
+    color: var(--gold-soft); font-family: var(--font-ui); letter-spacing:.1em; font-size:.85rem;
+    text-transform:uppercase; border:1px solid var(--gold); border-radius:30px; padding:12px 26px;
   }
   .final-msg{ margin-top:34px; font-size:1.4rem; color:var(--cream-dim); font-style:italic; opacity:0; transition:opacity 1s ease; }
   .final-msg.show{ opacity:1; }
@@ -293,13 +299,15 @@
 <section id="memories">
   <div class="sec-eyebrow">Hatıra Şeridi</div>
   <h2 class="sec-title">Birlikte Biriktirdiklerimiz</h2>
-  <div class="strip" id="stripEl">
-    <!-- POLAROID CARDS: her birinde .photo içine kendi fotoğrafını <img> olarak koyabilirsin -->
-    <div class="polaroid"><div class="photo">Fotoğraf 1<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">çocukluk yılları</div></div>
-    <div class="polaroid"><div class="photo">Fotoğraf 2<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">o yaz tatili</div></div>
-    <div class="polaroid"><div class="photo">Fotoğraf 3<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">ilk ev</div></div>
-    <div class="polaroid"><div class="photo">Fotoğraf 4<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">en son gülüşümüz</div></div>
-    <div class="polaroid"><div class="photo">Fotoğraf 5<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">bugüne kadar biz</div></div>
+
+  <div class="slideshow" id="slideshow">
+    <div class="slideshow-card" id="slideshowCard">
+      <div class="polaroid" id="slidePolaroid">
+        <div class="photo" id="slidePhoto">Fotoğraf 1<br><span style="opacity:.7">buraya kendi görselini ekle</span></div>
+      </div>
+    </div>
+    <p class="slideshow-hint">fotoğrafa dokun, sıradakine geç →</p>
+    <div class="slideshow-dots" id="slideshowDots"></div>
   </div>
 </section>
 
@@ -320,18 +328,20 @@
   <h2 class="sec-title">Seni Neden Seviyorum</h2>
   <div class="why-grid" id="whyGrid">
     <!-- her kart: ön yüzdeki emoji + arka yüzdeki metni kendine göre değiştir -->
-    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🕯️</div><div class="flip-face flip-back">Buraya birlikte yaşadığınız küçük bir anı yaz</div></div></div>
-    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🌙</div><div class="flip-face flip-back">Onun en sevdiğin huyunu yaz</div></div></div>
-    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">✨</div><div class="flip-face flip-back">Sana verdiği bir destek anını yaz</div></div></div>
-    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🎈</div><div class="flip-face flip-back">Birlikte güldüğünüz bir günü yaz</div></div></div>
-    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🎂</div><div class="flip-face flip-back">Ona yeni yaşı için dileğini yaz</div></div></div>
-    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🤍</div><div class="flip-face flip-back">Sadece "seni seviyorum" de, en güzeli budur</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🕯️</div><div class="flip-face flip-back">İlk yurtdışı seyahatimize beraber çıktık</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🌙</div><div class="flip-face flip-back">Hep yanımdasın — go girrrl!</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">✨</div><div class="flip-face flip-back">İlk kürek yarışımda yanımdaydın</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🎈</div><div class="flip-face flip-back">İki bacı, fışfış kürekçiyiz</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🎂</div><div class="flip-face flip-back">Vampir dişlerin 🦇</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🤍</div><div class="flip-face flip-back">Sayende insanlara nasıl had bildirilir öğrendim</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🌸</div><div class="flip-face flip-back">Kafanı kurcalayan her şeyin ve her hayalinin gerçekleşmesini diliyorum</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🦋</div><div class="flip-face flip-back">Seni çok çok çok seviyorum</div></div></div>
   </div>
 </section>
 
 <section id="quiz">
   <div class="sec-eyebrow">Küçük Bir Test</div>
-  <h2 class="sec-title">Beni Ne Kadar Tanıyorsun?</h2>
+  <h2 class="sec-title">Yavru Kurtu Ne Kadar Tanıyosun?</h2>
   <div class="quiz-box" id="quizBox">
 
     <div class="quiz-intro" id="quizIntro">
@@ -390,6 +400,57 @@
 </div>
 
 <script>
+// ---- Hatıra Slaytı ----
+// FOTOĞRAFLARI KENDİNE GÖRE DÜZENLE: src'yi kendi dosya adınla değiştir (örn. "foto1.jpg"), placeholder metni sil.
+// Örnek: { src: "foto1.jpg" } yazman yeterli, placeholder otomatik kaybolur.
+const slidePhotos = [
+  { src: "foto1.jpg" }, { src: "foto2.jpg" }, { src: "foto3.jpg" },
+  { src: "foto4.jpg" }, { src: "foto5.jpg" }, { src: "foto6.jpg" },
+  { src: "foto7.jpg" }, { src: "foto8.jpg" }, { src: "foto9.jpg" },
+  { src: "foto10.jpg" }
+];
+
+let slideIndex = 0;
+const slidePolaroid = document.getElementById('slidePolaroid');
+const slidePhoto = document.getElementById('slidePhoto');
+const slideshowDots = document.getElementById('slideshowDots');
+
+function renderSlideDots(){
+  slideshowDots.innerHTML = '';
+  slidePhotos.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'slideshow-dot' + (i === slideIndex ? ' active' : '');
+    dot.addEventListener('click', (e) => { e.stopPropagation(); goToSlide(i); });
+    slideshowDots.appendChild(dot);
+  });
+}
+
+function renderSlide(){
+  const item = slidePhotos[slideIndex];
+  if(item.src){
+    slidePhoto.innerHTML = `<img src="${item.src}" alt="anı fotoğrafı">`;
+  } else {
+    slidePhoto.innerHTML = `${item.placeholder}<br><span style="opacity:.7">buraya kendi görselini ekle</span>`;
+  }
+  renderSlideDots();
+}
+
+function goToSlide(i){
+  slidePolaroid.classList.add('fading');
+  setTimeout(() => {
+    slideIndex = i;
+    renderSlide();
+    slidePolaroid.classList.remove('fading');
+  }, 200);
+}
+
+slidePolaroid.addEventListener('click', () => {
+  const next = (slideIndex + 1) % slidePhotos.length;
+  goToSlide(next);
+});
+
+renderSlide();
+
 // ---- Envelope open ----
 const wrap = document.getElementById('envelopeWrap');
 wrap.addEventListener('click', () => {
@@ -481,29 +542,29 @@ document.querySelectorAll('.flip-card').forEach(card => {
 // SORULARI KENDİNE GÖRE DÜZENLE: her sorunun options'ından doğru olanın index'ini "correct" a yaz (0'dan başlar)
 const quizQuestions = [
   {
-    q: "İkimizin en sevdiği çocukluk anımız hangisiydi?",
-    options: ["Deniz kenarındaki o yaz", "Kardeş kavgaları :)", "Birlikte pişirdiğimiz kek faciası", "Okul yolundaki sohbetler"],
-    correct: 0
-  },
-  {
-    q: "Benim en sevdiğim yemek nedir?",
-    options: ["Mantı", "Karnıyarık", "Makarna", "Kendi seçtiğin"],
+    q: "Yavru Kurt'un sahip olmak isteyeceği güç ne olurdu?",
+    options: ["Işınlanmak", "Zihin Okumak", "Uçmak", "Fizik sorusu çözebilmek"],
     correct: 3
   },
   {
-    q: "Bir sorunum olduğunda ilk kimi ararım?",
-    options: ["Anneme", "Sana", "Arkadaşıma", "Kimseyi aramam"],
-    correct: 1
+    q: "Yavru Kurt'un en sevdiği tatlı nedir?",
+    options: ["Fıstık sarma", "Sütlü her tatlı", "Abla Komutan", "Tiramisu"],
+    correct: 2
   },
   {
-    q: "En çok hangi filmi/diziyi birlikte izledik?",
-    options: ["Buraya kendi cevabını yaz", "Buraya kendi cevabını yaz", "Buraya kendi cevabını yaz", "Buraya kendi cevabını yaz"],
-    correct: 0
-  },
-  {
-    q: "Seninle ilgili en sevdiğim şey nedir?",
-    options: ["Gülüşün", "Bana hep destek olman", "Sabrın", "Hepsi"],
+    q: "Prag'a gittiğimizde Yavru Kurt ilk nereye girmek istemişti?",
+    options: ["Tesco", "Flying Tiger", "Suşi bantlı restoran", "Götümüz bi yatak görsün otele gidelim"],
     correct: 3
+  },
+  {
+    q: "Yavru Kurt teknede hangi koltukta ve ergo derecesi max kaç olmuştur?",
+    options: ["2 numara - 1.58", "1 numara - 2.01", "1 numara - 1.47", "3 numara - 1.49"],
+    correct: 2
+  },
+  {
+    q: "Yavru Kurt kim için İstanbul içi 2.5 saat yol gider?",
+    options: ["Abla Komutan", "Abla Komutan", "Abla Komutan", "Abla Komutan"],
+    correct: 0
   }
 ];
 
