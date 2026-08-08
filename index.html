@@ -1,1 +1,637 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sana Bir Mektup 🕯️</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Caveat:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<style>
+  :root{
+    --ink:#2a1810;
+    --plum-deep:#241220;
+    --plum:#3b1f35;
+    --plum-light:#5a2f52;
+    --gold:#e8b84b;
+    --gold-soft:#f6d68a;
+    --paper:#fbf3e7;
+    --paper-shadow:#e8dcc8;
+    --cream:#f3e9de;
+    --cream-dim:#cbb9ac;
+    --font-script: 'Caveat', cursive;
+    --font-serif: 'Cormorant Garamond', serif;
+    --font-ui: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background: radial-gradient(ellipse at 50% 0%, var(--plum) 0%, var(--plum-deep) 55%, #150a13 100%);
+    color: var(--cream);
+    font-family: var(--font-serif);
+    overflow-x:hidden;
+    min-height:100vh;
+  }
+  /* ambient candle flicker particles */
+  .glow-orb{
+    position:fixed; border-radius:50%; filter:blur(60px); opacity:.25; pointer-events:none; z-index:0;
+    background: radial-gradient(circle, var(--gold-soft), transparent 70%);
+  }
+  .glow-orb.o1{width:420px;height:420px; top:-100px; left:-120px;}
+  .glow-orb.o2{width:340px;height:340px; bottom:10%; right:-100px;}
+
+  section{position:relative; z-index:1; padding: 90px 24px;}
+
+  /* ---------- HERO / ENVELOPE ---------- */
+  #hero{
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding-top:60px;
+  }
+  .eyebrow{
+    font-family: var(--font-ui); letter-spacing:.3em; text-transform:uppercase;
+    font-size:.7rem; color:var(--gold-soft); opacity:.75; margin-bottom:18px;
+  }
+  .envelope-wrap{
+    perspective: 1400px; cursor:pointer; user-select:none;
+    margin-top: 10px;
+  }
+  .envelope{
+    width:280px; height:190px; position:relative;
+    filter: drop-shadow(0 30px 40px rgba(0,0,0,.5));
+    overflow: hidden;
+    border-radius:6px;
+  }
+  .env-body{
+    position:absolute; inset:0;
+    background: linear-gradient(160deg, #6b3a5e, #4a2740);
+    border-radius:6px;
+    box-shadow: inset 0 0 0 1px rgba(232,184,75,.25);
+  }
+  .env-flap{
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    clip-path: polygon(0 0, 100% 0, 50% 58%);
+    background: linear-gradient(160deg, #7c4468, #56304a);
+    transform-origin: top center;
+    transition: transform 1s cubic-bezier(.6,.1,.2,1);
+    border-radius:6px 6px 0 0;
+    z-index:3;
+  }
+  .envelope-wrap.open .env-flap{ transform: rotateX(180deg); }
+  .seal{
+    position:absolute; top:52%; left:50%; transform:translate(-50%,-50%);
+    width:54px; height:54px; border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #f0c86a, var(--gold) 60%, #a5761f 100%);
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--font-script); font-size:1.5rem; color:#5a3d10;
+    box-shadow: 0 6px 14px rgba(0,0,0,.4);
+    z-index:4; transition: opacity .4s ease, transform .4s ease;
+  }
+  .envelope-wrap.open .seal{ opacity:0; transform:translate(-50%,-50%) scale(.4); }
+  .letter-peek{
+    position:absolute; left:8%; right:8%; bottom:6px; height:80%;
+    background: var(--paper);
+    border-radius:4px 4px 0 0;
+    z-index:2;
+    transition: transform 1s cubic-bezier(.6,.1,.2,1) .15s;
+    transform: translateY(78%);
+    box-shadow: 0 -2px 10px rgba(0,0,0,.15);
+  }
+  .envelope-wrap.open .letter-peek{ transform: translateY(6%); }
+  .hero-title{
+    font-family: var(--font-script); font-size: 3.4rem; color: var(--gold-soft);
+    margin-top:44px; line-height:1;
+  }
+  .hero-sub{
+    font-size:1.15rem; color:var(--cream-dim); margin-top:10px; max-width:420px;
+    font-style: italic; font-weight:400;
+  }
+  .hint{
+    margin-top:34px; font-family: var(--font-ui); font-size:.75rem; letter-spacing:.15em;
+    color: var(--gold-soft); opacity:.6; text-transform:uppercase;
+    animation: pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:.35} 50%{opacity:.85} }
+  .scroll-gate{ display:none; }
+  .revealed .scroll-gate{ display:block; animation: fadeUp .8s ease forwards; }
+
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(24px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---------- SECTION HEADERS ---------- */
+  .sec-eyebrow{
+    font-family: var(--font-ui); font-size:.7rem; letter-spacing:.28em; text-transform:uppercase;
+    color: var(--gold); text-align:center; margin-bottom:10px;
+  }
+  .sec-title{
+    font-family: var(--font-script); font-size:2.6rem; color:var(--gold-soft); text-align:center;
+  }
+
+  /* ---------- MEMORY STRIP ---------- */
+  #memories{ padding-top:40px; }
+  .strip{
+    display:flex; gap:26px; overflow-x:auto; padding: 50px 6vw 30px; scroll-snap-type:x proximity;
+  }
+  .strip::-webkit-scrollbar{ height:6px; }
+  .strip::-webkit-scrollbar-thumb{ background: var(--gold); border-radius:4px; opacity:.5; }
+  .polaroid{
+    flex:0 0 240px; background:var(--paper); padding:14px 14px 46px; border-radius:3px;
+    box-shadow: 0 18px 30px rgba(0,0,0,.4);
+    scroll-snap-align:center;
+    transition: transform .3s ease;
+    cursor:default;
+  }
+  .polaroid:nth-child(odd){ transform: rotate(-3deg); }
+  .polaroid:nth-child(even){ transform: rotate(2.5deg); }
+  .polaroid:hover{ transform: scale(1.05) rotate(0deg); }
+  .polaroid .photo{
+    width:100%; aspect-ratio: 4/5; border-radius:2px; overflow:hidden;
+    background: linear-gradient(135deg, #d8c3a5, #b79c78);
+    display:flex; align-items:center; justify-content:center;
+    color:#7a5f3f; font-family:var(--font-ui); font-size:.75rem; text-align:center; padding:10px;
+  }
+  .polaroid .cap{
+    font-family: var(--font-script); font-size:1.25rem; color:var(--ink); text-align:center; margin-top:12px;
+  }
+
+  /* ---------- LETTER ---------- */
+  #letter{ display:flex; flex-direction:column; align-items:center; padding-bottom:60px; }
+  .paper{
+    max-width:620px; width:100%; background:var(--paper); color:var(--ink);
+    border-radius:4px; padding: 48px 44px; margin-top:30px;
+    box-shadow: 0 30px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.4);
+    position:relative;
+  }
+  .paper::before{
+    content:''; position:absolute; top:0; left:24px; right:24px; height:1px;
+    background: linear-gradient(90deg, transparent, var(--paper-shadow), transparent);
+  }
+  #letterText{
+    font-size:1.28rem; line-height:1.85; white-space:pre-wrap; min-height:2em;
+  }
+  #letterText .cursor{ display:inline-block; width:2px; background:var(--ink); animation: blink 1s step-start infinite; margin-left:1px; }
+  @keyframes blink{ 50%{opacity:0;} }
+  .signature{ font-family:var(--font-script); font-size:1.9rem; margin-top:26px; text-align:right; opacity:0; transition:opacity .6s ease; }
+  .signature.show{ opacity:1; }
+  .read-btn{
+    margin-top:36px; font-family: var(--font-ui); letter-spacing:.08em; font-size:.85rem;
+    background: var(--gold); color:#3a2607; border:none; padding:14px 30px; border-radius:30px;
+    cursor:pointer; text-transform:uppercase; font-weight:600;
+    box-shadow: 0 10px 20px rgba(232,184,75,.25);
+    transition: transform .2s ease;
+  }
+  .read-btn:hover{ transform: translateY(-2px); }
+  .read-btn:disabled{ opacity:0; pointer-events:none; }
+  .letter-actions{ display:flex; gap:14px; justify-content:flex-end; flex-wrap:wrap; margin-top:36px; }
+  .letter-actions .read-btn{ margin-top:0; }
+  .listen-btn{
+    font-family: var(--font-ui); letter-spacing:.05em; font-size:.85rem;
+    background: transparent; color: var(--ink); border:1.5px solid var(--ink); opacity:.7;
+    padding:14px 26px; border-radius:30px; cursor:pointer; font-weight:600;
+    transition: transform .2s ease, opacity .2s ease, background .2s ease;
+  }
+  .listen-btn:hover{ opacity:1; transform: translateY(-2px); }
+  .listen-btn.speaking{ background: var(--ink); color: var(--paper); opacity:1; }
+
+  /* ---------- WHY I LOVE YOU CARDS ---------- */
+  #why{ }
+  .why-grid{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:18px;
+    max-width:760px; margin: 40px auto 0;
+  }
+  .flip-card{ perspective:1000px; height:170px; }
+  .flip-inner{
+    position:relative; width:100%; height:100%; transition: transform .6s cubic-bezier(.6,.1,.2,1);
+    transform-style:preserve-3d; cursor:pointer;
+  }
+  .flip-card.flipped .flip-inner{ transform: rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:16px;
+  }
+  .flip-front{
+    background: linear-gradient(150deg, var(--plum-light), var(--plum));
+    box-shadow: inset 0 0 0 1px rgba(232,184,75,.3);
+    font-size:2rem;
+  }
+  .flip-back{
+    background: var(--gold-soft); color:#3a2607; transform: rotateY(180deg);
+    font-family: var(--font-serif); font-size:1.05rem; font-weight:600; line-height:1.35;
+  }
+
+  /* ---------- QUIZ ---------- */
+  .quiz-box{
+    max-width:520px; margin: 40px auto 0; background: rgba(0,0,0,.18);
+    border: 1px solid rgba(232,184,75,.25); border-radius:16px; padding:38px 34px;
+    text-align:center;
+  }
+  .quiz-intro-text{ font-size:1.15rem; color:var(--cream-dim); font-style:italic; margin-bottom:26px; }
+  .quiz-progress{
+    font-family:var(--font-ui); font-size:.75rem; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--gold); margin-bottom:16px;
+  }
+  .quiz-q-text{ font-size:1.5rem; color:var(--cream); margin-bottom:24px; line-height:1.4; }
+  .quiz-options{ display:flex; flex-direction:column; gap:12px; }
+  .quiz-opt{
+    font-family: var(--font-serif); font-size:1.1rem; color:var(--cream);
+    background: rgba(255,255,255,.06); border:1.5px solid rgba(232,184,75,.3);
+    border-radius:12px; padding:14px 18px; cursor:pointer; text-align:left;
+    transition: all .2s ease;
+  }
+  .quiz-opt:hover{ background: rgba(232,184,75,.15); transform: translateX(4px); }
+  .quiz-opt.correct{ background: rgba(122,184,90,.3); border-color:#7ab85a; }
+  .quiz-opt.wrong{ background: rgba(200,90,90,.3); border-color:#c85a5a; }
+  .quiz-opt.disabled{ pointer-events:none; opacity:.75; }
+  .quiz-feedback{ margin-top:18px; font-size:1.05rem; font-style:italic; color:var(--gold-soft); min-height:1.3em; }
+  .quiz-result-score{ font-family: var(--font-script); font-size:2.6rem; color:var(--gold-soft); }
+  .quiz-result-msg{ font-size:1.15rem; color:var(--cream-dim); font-style:italic; margin:14px 0 26px; }
+
+  /* ---------- CANDLE FINALE ---------- */
+  #finale{ text-align:center; padding-bottom:120px; }
+  .cake{ margin: 40px auto 0; width:220px; }
+  .candle-btn{
+    background:none; border:none; cursor:pointer; display:block; margin:0 auto;
+  }
+  .final-msg{ margin-top:34px; font-size:1.4rem; color:var(--cream-dim); font-style:italic; opacity:0; transition:opacity 1s ease; }
+  .final-msg.show{ opacity:1; }
+  .final-name{ font-family:var(--font-script); font-size:2.2rem; color:var(--gold-soft); margin-top:8px; opacity:0; transition:opacity 1s ease .3s; }
+  .final-name.show{ opacity:1; }
+  .notify-box{ margin-top:70px; opacity:0; transition:opacity 1s ease .5s; }
+  .notify-box.show{ opacity:1; }
+  .notify-text{ font-style:italic; color:var(--cream-dim); margin-bottom:16px; font-size:1.05rem; }
+  .notify-status{ margin-top:14px; font-family:var(--font-ui); font-size:.8rem; color:var(--gold-soft); min-height:1.2em; }
+
+  footer{ text-align:center; padding:40px 20px 60px; font-family:var(--font-ui); font-size:.75rem; color:var(--cream-dim); opacity:.5; letter-spacing:.05em; }
+
+  @media (max-width:480px){
+    .hero-title{ font-size:2.6rem; }
+    .paper{ padding:32px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orb o1"></div>
+<div class="glow-orb o2"></div>
+
+<section id="hero">
+  <div class="eyebrow">iyi ki doğdun ✧ sana özel</div>
+  <div class="envelope-wrap" id="envelopeWrap">
+    <div class="envelope">
+      <div class="env-body"></div>
+      <div class="letter-peek"></div>
+      <div class="env-flap"></div>
+      <div class="seal">İ</div>
+    </div>
+  </div>
+  <h1 class="hero-title">Sana bir şey hazırladım…</h1>
+  <p class="hero-sub">Mumu üfleyip zarfı açmadan önce derin bir nefes al. Bu, senin için, tamamen senin için.</p>
+  <div class="hint">zarfa dokun ✧ aç</div>
+</section>
+
+<div id="mainContent" class="revealed">
+<div class="scroll-gate">
+
+<section id="memories">
+  <div class="sec-eyebrow">Hatıra Şeridi</div>
+  <h2 class="sec-title">Birlikte Biriktirdiklerimiz</h2>
+  <div class="strip" id="stripEl">
+    <!-- POLAROID CARDS: her birinde .photo içine kendi fotoğrafını <img> olarak koyabilirsin -->
+    <div class="polaroid"><div class="photo">Fotoğraf 1<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">çocukluk yılları</div></div>
+    <div class="polaroid"><div class="photo">Fotoğraf 2<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">o yaz tatili</div></div>
+    <div class="polaroid"><div class="photo">Fotoğraf 3<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">ilk ev</div></div>
+    <div class="polaroid"><div class="photo">Fotoğraf 4<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">en son gülüşümüz</div></div>
+    <div class="polaroid"><div class="photo">Fotoğraf 5<br><span style="opacity:.7">buraya kendi görselini ekle</span></div><div class="cap">bugüne kadar biz</div></div>
+  </div>
+</section>
+
+<section id="letter">
+  <div class="sec-eyebrow">Mumun Işığında</div>
+  <h2 class="sec-title">Sana Bir Mektup</h2>
+  <div class="paper">
+    <div id="letterText"></div>
+    <div class="signature" id="signature">— Yavru Kurt'un</div>
+    <div class="letter-actions">
+      <button class="read-btn" id="readBtn">Mektubu Oku</button>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-eyebrow">Kartları Çevir</div>
+  <h2 class="sec-title">Seni Neden Seviyorum</h2>
+  <div class="why-grid" id="whyGrid">
+    <!-- her kart: ön yüzdeki emoji + arka yüzdeki metni kendine göre değiştir -->
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🕯️</div><div class="flip-face flip-back">Buraya birlikte yaşadığınız küçük bir anı yaz</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🌙</div><div class="flip-face flip-back">Onun en sevdiğin huyunu yaz</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">✨</div><div class="flip-face flip-back">Sana verdiği bir destek anını yaz</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🎈</div><div class="flip-face flip-back">Birlikte güldüğünüz bir günü yaz</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🎂</div><div class="flip-face flip-back">Ona yeni yaşı için dileğini yaz</div></div></div>
+    <div class="flip-card"><div class="flip-inner"><div class="flip-face flip-front">🤍</div><div class="flip-face flip-back">Sadece "seni seviyorum" de, en güzeli budur</div></div></div>
+  </div>
+</section>
+
+<section id="quiz">
+  <div class="sec-eyebrow">Küçük Bir Test</div>
+  <h2 class="sec-title">Beni Ne Kadar Tanıyorsun?</h2>
+  <div class="quiz-box" id="quizBox">
+
+    <div class="quiz-intro" id="quizIntro">
+      <p class="quiz-intro-text">5 soru, hepsi bizimle ilgili. Hazır mısın?</p>
+      <button class="read-btn" id="quizStartBtn">Teste Başla</button>
+    </div>
+
+    <div class="quiz-question" id="quizQuestion" style="display:none;">
+      <div class="quiz-progress" id="quizProgress"></div>
+      <p class="quiz-q-text" id="quizQText"></p>
+      <div class="quiz-options" id="quizOptions"></div>
+      <p class="quiz-feedback" id="quizFeedback"></p>
+      <button class="read-btn" id="quizNextBtn" style="display:none;">Sıradaki Soru</button>
+    </div>
+
+    <div class="quiz-result" id="quizResult" style="display:none;">
+      <p class="quiz-result-score" id="quizResultScore"></p>
+      <p class="quiz-result-msg" id="quizResultMsg"></p>
+      <button class="listen-btn" id="quizRetryBtn">Tekrar Dene</button>
+    </div>
+
+  </div>
+</section>
+
+<section id="finale">
+  <div class="sec-eyebrow">Son Bir Şey Daha</div>
+  <h2 class="sec-title">Dile Bir Dilek</h2>
+  <svg class="cake" viewBox="0 0 220 160" id="cakeSvg">
+    <rect x="20" y="90" width="180" height="60" rx="10" fill="#5a2f52"/>
+    <rect x="20" y="90" width="180" height="16" fill="#e8b84b" opacity="0.5"/>
+    <rect x="40" y="60" width="140" height="40" rx="8" fill="#6b3a5e"/>
+    <rect x="40" y="60" width="140" height="12" fill="#f6d68a" opacity="0.5"/>
+    <g id="candles">
+      <rect x="65" y="30" width="8" height="34" fill="#fbf3e7"/>
+      <rect x="106" y="24" width="8" height="40" fill="#fbf3e7"/>
+      <rect x="147" y="30" width="8" height="34" fill="#fbf3e7"/>
+      <ellipse class="flame" cx="69" cy="26" rx="6" ry="10" fill="#e8b84b"/>
+      <ellipse class="flame" cx="110" cy="20" rx="6" ry="10" fill="#e8b84b"/>
+      <ellipse class="flame" cx="151" cy="26" rx="6" ry="10" fill="#e8b84b"/>
+    </g>
+  </svg>
+  <button class="candle-btn" id="blowBtn" style="margin-top:20px; color:var(--gold-soft); font-family:var(--font-ui); letter-spacing:.1em; font-size:.8rem; text-transform:uppercase; border:1px solid var(--gold); border-radius:30px; padding:12px 26px; background:transparent; cursor:pointer;">Mumları Üfle</button>
+  <p class="final-msg" id="finalMsg">İyi ki varsın, iyi ki ablamsın.</p>
+  <p class="final-name" id="finalName">İyi ki Doğdun ✧</p>
+
+  <div class="notify-box" id="notifyBox">
+    <p class="notify-text">Her gün sana küçük bir hatırlatma göndermemi ister misin?</p>
+    <button class="candle-btn" id="notifyBtn">🔔 Bildirimleri Aç</button>
+    <p class="notify-status" id="notifyStatus"></p>
+  </div>
+</section>
+
+<footer>elle, kalple ve biraz da kod ile hazırlandı</footer>
+
+</div>
+</div>
+
+<script>
+// ---- Envelope open ----
+const wrap = document.getElementById('envelopeWrap');
+wrap.addEventListener('click', () => {
+  if(wrap.classList.contains('open')) return;
+  wrap.classList.add('open');
+  setTimeout(() => {
+    document.getElementById('memories').scrollIntoView({behavior:'smooth'});
+  }, 1100);
+});
+
+// ---- Letter typewriter ----
+const letterContent = `Abla Komutan'a,
+
+Sana bu mektubu yazmak düşündüğümden daha zor. Çünkü seni anlatmaya çalışınca, söylemek istediğim her şey bir anda fazla basit geliyor. "Ablamı çok seviyorum" demek doğru ama yetmiyor. Çünkü sen benim için sadece ablam olmadın.
+
+Sen benim alışkanlığım oldun.
+
+İyi bir şey olduğunda anlatmak istediğim, canım sıkıldığında ilk aklıma gelen, saçma sapan bir şey olduğunda bile dönüp konuştuğum insanlardan biri oldun. Bazen saatlerce ciddi şeyler konuşuyoruz, bazen de dünyanın en gereksiz şeyini konuşup gülüyoruz. Ama galiba en sevdiğim şeylerden biri, senin yanında hiçbir şeyi fazla düşünmek zorunda olmamam.
+
+Ve büyüdükçe fark ettiğim bir şey var: sana benzemeyi seviyorum.
+
+Bazen bir davranışımda, bir cümlemde, insanlara karşı bir tepkimde senden bir şey buluyorum. Belki bunu sana hiç söylemedim ama kendimde senden bir parça görmek bana garip bir şekilde iyi geliyor. Çünkü insan büyürken kendine örnek aldığı insanları dışarıda arıyor sanıyor. Benim o kadar uzağa bakmama gerek kalmamış.
+
+Sen benim hayatımın başlangıcındasın. Ben kim olduğumu bulmaya çalışırken sen deniz feneri kılığına bürünüp beni o fırtınadan çıkaran, hangi limana varacağımı değil, kendi rotamı bulacak cesareti verdin. Belki de bu yüzden kaybolmaktan korkmadım; çünkü ne kadar uzaklaşırsam uzaklaşayım, dönüp baktığımda seni hep aynı yerde bulacağımı biliyordum.
+
+Ve belki sana bunu yeterince söylemiyorum ama… sana benzemeyi seviyorum. Çünkü sende kendimden önce tanıdığım, büyürken bana yol gösteren bir taraf var. Kendimde sana benzeyen bir şey gördüğümde, bunu hayatımdaki en güzel tesadüflerden biri olarak görüyorum.
+
+İyi ki benim Abla Komutan'ımsın. İyi ki ben de senin Yavru Kurt'unum. Ve iyi ki bizim hikâyemiz sadece "iki kardeş" diye anlatılabilecek kadar basit değil.
+
+Seni çok seviyorum.`;
+
+const letterEl = document.getElementById('letterText');
+const readBtn = document.getElementById('readBtn');
+const sigEl = document.getElementById('signature');
+let typed = false;
+
+readBtn.addEventListener('click', () => {
+  if(typed) return;
+  typed = true;
+  readBtn.disabled = true;
+  let i = 0;
+  letterEl.innerHTML = '<span class="cursor">&nbsp;</span>';
+  const interval = setInterval(() => {
+    if(i < letterContent.length){
+      const chunk = letterContent.slice(0, i+1).replace(/\n/g, '<br>');
+      letterEl.innerHTML = chunk + '<span class="cursor">&nbsp;</span>';
+      i++;
+    } else {
+      clearInterval(interval);
+      letterEl.innerHTML = letterContent.replace(/\n/g, '<br>');
+      sigEl.classList.add('show');
+    }
+  }, 18);
+});
+
+// ---- Push notifications (OneSignal) ----
+// KURULUM: aşağıdaki YOUR_ONESIGNAL_APP_ID yerine kendi OneSignal App ID'ni yapıştır.
+const ONESIGNAL_APP_ID = "da389c9f-6166-4772-b540-34202f2e6e2a";
+
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  if(ONESIGNAL_APP_ID === "YOUR_ONESIGNAL_APP_ID") return; // App ID girilmeden çalışmaz
+  await OneSignal.init({ appId: ONESIGNAL_APP_ID, allowLocalhostAsSecureOrigin: true });
+});
+
+const notifyBtn = document.getElementById('notifyBtn');
+const notifyStatus = document.getElementById('notifyStatus');
+
+notifyBtn.addEventListener('click', async () => {
+  if(ONESIGNAL_APP_ID === "YOUR_ONESIGNAL_APP_ID"){
+    notifyStatus.textContent = "Bildirimler henüz kurulmadı — kurulum adımlarını takip et.";
+    return;
+  }
+  window.OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.Notifications.requestPermission();
+    const granted = OneSignal.Notifications.permission;
+    notifyStatus.textContent = granted
+      ? "Harika, artık günlük hatırlatmaları alacaksın 🕯️"
+      : "Bildirim izni verilmedi — istersen tarayıcı ayarlarından tekrar açabilirsin.";
+  });
+});
+
+// ---- Flip cards ----
+document.querySelectorAll('.flip-card').forEach(card => {
+  card.addEventListener('click', () => card.classList.toggle('flipped'));
+});
+
+// ---- Mini Aile Quizi ----
+// SORULARI KENDİNE GÖRE DÜZENLE: her sorunun options'ından doğru olanın index'ini "correct" a yaz (0'dan başlar)
+const quizQuestions = [
+  {
+    q: "İkimizin en sevdiği çocukluk anımız hangisiydi?",
+    options: ["Deniz kenarındaki o yaz", "Kardeş kavgaları :)", "Birlikte pişirdiğimiz kek faciası", "Okul yolundaki sohbetler"],
+    correct: 0
+  },
+  {
+    q: "Benim en sevdiğim yemek nedir?",
+    options: ["Mantı", "Karnıyarık", "Makarna", "Kendi seçtiğin"],
+    correct: 3
+  },
+  {
+    q: "Bir sorunum olduğunda ilk kimi ararım?",
+    options: ["Anneme", "Sana", "Arkadaşıma", "Kimseyi aramam"],
+    correct: 1
+  },
+  {
+    q: "En çok hangi filmi/diziyi birlikte izledik?",
+    options: ["Buraya kendi cevabını yaz", "Buraya kendi cevabını yaz", "Buraya kendi cevabını yaz", "Buraya kendi cevabını yaz"],
+    correct: 0
+  },
+  {
+    q: "Seninle ilgili en sevdiğim şey nedir?",
+    options: ["Gülüşün", "Bana hep destek olman", "Sabrın", "Hepsi"],
+    correct: 3
+  }
+];
+
+let quizIndex = 0;
+let quizScore = 0;
+
+const quizIntro = document.getElementById('quizIntro');
+const quizQuestionEl = document.getElementById('quizQuestion');
+const quizResultEl = document.getElementById('quizResult');
+const quizProgress = document.getElementById('quizProgress');
+const quizQText = document.getElementById('quizQText');
+const quizOptionsEl = document.getElementById('quizOptions');
+const quizFeedback = document.getElementById('quizFeedback');
+const quizNextBtn = document.getElementById('quizNextBtn');
+const quizResultScore = document.getElementById('quizResultScore');
+const quizResultMsg = document.getElementById('quizResultMsg');
+
+function renderQuizQuestion(){
+  const item = quizQuestions[quizIndex];
+  quizProgress.textContent = `Soru ${quizIndex + 1} / ${quizQuestions.length}`;
+  quizQText.textContent = item.q;
+  quizFeedback.textContent = '';
+  quizNextBtn.style.display = 'none';
+  quizOptionsEl.innerHTML = '';
+
+  item.options.forEach((opt, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-opt';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.quiz-opt').forEach(o => o.classList.add('disabled'));
+      if(i === item.correct){
+        btn.classList.add('correct');
+        quizFeedback.textContent = 'Doğru! 🎉';
+        quizScore++;
+      } else {
+        btn.classList.add('wrong');
+        document.querySelectorAll('.quiz-opt')[item.correct].classList.add('correct');
+        quizFeedback.textContent = 'Olsun, önemli değil 🤍';
+      }
+      quizNextBtn.style.display = 'inline-block';
+    });
+    quizOptionsEl.appendChild(btn);
+  });
+}
+
+function showQuizResult(){
+  quizQuestionEl.style.display = 'none';
+  quizResultEl.style.display = 'block';
+  quizResultScore.textContent = `${quizScore} / ${quizQuestions.length}`;
+  const msgs = [
+    "Yine de seni çok seviyorum 🤍",
+    "Fena değil, ama daha çok vaktimiz olacak birlikte geçirecek 💛",
+    "Vay, gerçekten iyi tanıyorsun beni!",
+    "Mükemmel! Beni senden iyi kimse tanıyamaz.",
+    "Kusursuz! İkimiz de biliyoruz zaten bu skor sürpriz değildi 🎉"
+  ];
+  quizResultMsg.textContent = msgs[quizScore] || msgs[msgs.length - 1];
+}
+
+document.getElementById('quizStartBtn').addEventListener('click', () => {
+  quizIndex = 0; quizScore = 0;
+  quizIntro.style.display = 'none';
+  quizQuestionEl.style.display = 'block';
+  renderQuizQuestion();
+});
+
+quizNextBtn.addEventListener('click', () => {
+  quizIndex++;
+  if(quizIndex < quizQuestions.length){
+    renderQuizQuestion();
+  } else {
+    showQuizResult();
+  }
+});
+
+document.getElementById('quizRetryBtn').addEventListener('click', () => {
+  quizResultEl.style.display = 'none';
+  quizIntro.style.display = 'block';
+});
+
+// ---- Candle blow + confetti ----
+const blowBtn = document.getElementById('blowBtn');
+const flames = document.querySelectorAll('.flame');
+const finalMsg = document.getElementById('finalMsg');
+const finalName = document.getElementById('finalName');
+
+function confettiBurst(){
+  const colors = ['#e8b84b','#f6d68a','#c98bb0','#fbf3e7'];
+  for(let i=0;i<60;i++){
+    const p = document.createElement('div');
+    const size = 6 + Math.random()*6;
+    p.style.position='fixed';
+    p.style.left = (40 + Math.random()*20) + 'vw';
+    p.style.top = '40vh';
+    p.style.width = size+'px';
+    p.style.height = size+'px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.borderRadius = Math.random()>0.5 ? '50%' : '2px';
+    p.style.zIndex = 50;
+    p.style.pointerEvents='none';
+    const dx = (Math.random()-0.5)*500;
+    const dy = 300 + Math.random()*400;
+    const rot = Math.random()*600;
+    document.body.appendChild(p);
+    p.animate([
+      { transform:'translate(0,0) rotate(0deg)', opacity:1 },
+      { transform:`translate(${dx}px, ${dy}px) rotate(${rot}deg)`, opacity:0 }
+    ], { duration: 1400 + Math.random()*800, easing:'cubic-bezier(.2,.6,.3,1)' });
+    setTimeout(()=>p.remove(), 2400);
+  }
+}
+
+blowBtn.addEventListener('click', () => {
+  if(blowBtn.disabled) return;
+  blowBtn.disabled = true;
+  flames.forEach(f => f.style.transition = 'opacity .3s ease, transform .3s ease');
+  flames.forEach(f => { f.style.opacity = 0; f.style.transform = 'scaleY(0.2)'; });
+  confettiBurst();
+  setTimeout(() => {
+    finalMsg.classList.add('show');
+    finalName.classList.add('show');
+    document.getElementById('notifyBox').classList.add('show');
+    blowBtn.style.opacity = 0;
+  }, 400);
+});
+</script>
+
+</body>
+</html>
 
